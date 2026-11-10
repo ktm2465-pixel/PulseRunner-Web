@@ -22,6 +22,14 @@ The game auto-runs. W is not forward movement or acceleration. Release the reque
 
 ## Verification
 
+### Consecutive input / rail direction fix
+
+- A Release or unrelated key can no longer reuse a previous Press to consume the next Tap.
+- Rail directions use ASCII `<<` / `>>` and an explicitly assigned built-in font/material.
+- Regression reproduction: 2 tests failed before the fix, passed afterward.
+- Windows-target EditMode: 681/681 passed. Web-target EditMode: 678/681; three PC-specific audio sample/endpoint checks differ after web import.
+- Timing windows and DSP clock are unchanged. Dense manual input and rail visibility still require browser play checks.
+
 - Unity WebGL build: succeeded.
 - Local Chromium browser: loading, start, D movement, P pause/resume and R restart checked.
 - No browser console errors during the checked segment; missed inputs produced expected gameplay collision/recovery warnings.

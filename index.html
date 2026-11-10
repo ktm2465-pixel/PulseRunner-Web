@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pulse Runner: Heartline · 직접 플레이</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#15131a;color:#fff2f7;font-family:system-ui,'Malgun Gothic',sans-serif}header,main{max-width:1280px;margin:auto;padding:16px}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:22px;margin:0}button{border:1px solid #d68ba9;background:#382332;color:white;border-radius:8px;padding:12px 20px;font-size:16px;cursor:pointer}button:disabled{opacity:.45;cursor:wait}#stage{position:relative;background:#08090b;aspect-ratio:16/9}canvas{width:100%;height:100%;display:block}#gate{position:absolute;inset:0;display:grid;place-content:center;text-align:center;background:#111018e8;padding:24px}#gate h2{font-size:30px}#status{color:#dfadc2}dialog{width:min(760px,94vw);background:#211c28;color:#fff;border:1px solid #cd85a5;border-radius:12px;padding:28px}dialog::backdrop{background:#000a}dl{display:grid;grid-template-columns:180px 1fr;gap:12px}dt{font-weight:bold;color:#ff9fc8}dd{margin:0;line-height:1.5}p{line-height:1.6}.note{color:#cbbec9;font-size:14px}.error{color:#ffb8b8}footer{text-align:center;padding:16px;color:#cbbec9}#help{margin-bottom:0}@media(max-width:650px){dl{grid-template-columns:1fr;gap:7px}dd{margin-bottom:12px}h1{font-size:17px}}
+</style>
+</head>
+<body>
+<header><h1>PULSE RUNNER · HEARTLINE</h1><div><button id="helpButton">조작 방법</button> <button id="full">전체 화면</button></div></header>
+<main>
+<div id="stage"><canvas id="game" width="1280" height="720" tabindex="0" aria-label="Pulse Runner 게임 화면"></canvas>
+<section id="gate"><h2>음악에 맞춰 달리고, 이동하고, 파쿠르하세요.</h2><p>A / D 이동 · 마우스 왼쪽 Pulse · Space 점프<br>S 슬라이드 · Shift 대시 · W + A / D 월런</p><p id="status">게임을 불러오는 중입니다. 첫 실행은 시간이 걸릴 수 있습니다.</p><button id="start" disabled>로딩 중…</button><p class="note">PC Chrome / Edge 권장 · 소리를 켜고 플레이하세요.<br>리듬 판정과 장애물 충돌은 별개입니다. W는 전진·가속 키가 아닙니다.</p></section></div>
+<p class="note">P 일시정지·재개 / R 처음부터 다시 시작 · 키 입력이 안 되면 게임 화면을 클릭하세요.<br>브라우저·기기별 음악 지연과 성능 차이가 있을 수 있습니다. 모바일 웹은 아직 검증하지 않았습니다.</p>
+</main>
+<dialog id="help"><h2>조작 방법</h2><dl>
+<dt>자동 전진</dt><dd>앞으로 달리기는 자동입니다.</dd>
+<dt>A / D</dt><dd>지상 좌우 이동 / 튜브 안 360도 이동 / 레일 위 균형</dd>
+<dt>마우스 왼쪽</dt><dd>노드 위치에 맞춘 뒤 박자에 맞춰 Pulse 입력</dd>
+<dt>W + A / D 유지</dt><dd>해당 방향의 벽에서 월런. W를 떼면 벽에서 나옵니다.</dd>
+<dt>W + 반대 방향 + Space</dt><dd>반대편 벽으로 점프</dd>
+<dt>Space</dt><dd>점프 / 장애물 넘기 / 레일 진입. 레일 구간 중간에도 진입할 수 있습니다.</dd>
+<dt>W 유지</dt><dd>차트가 요구하는 튜브 Hold. 튜브 안 좌우 이동은 A / D입니다.</dd>
+<dt>S / 왼쪽 Shift</dt><dd>슬라이드 / 대시</dd>
+<dt>키를 떼기</dt><dd>길게 누르는 노드는 끝부분에서 요구하는 키를 놓습니다.</dd>
+<dt>P / R</dt><dd>일시정지·재개 / 재시작</dd>
+</dl><p class="note">Wall은 W + 방향, Rail은 Space로 중간 진입 가능합니다. 늦게 진입해도 지나간 노드의 Miss가 성공으로 바뀌지는 않습니다.</p><button id="closeHelp">닫기</button></dialog>
+<footer>직접 제작한 Unity 프로토타입 · RestartLine / Normal v2</footer>
+<script src="Build/WebBuild.loader.js"></script>
+<script>
+// 이 페이지는 안내와 시작 요청만 담당합니다. 실제 입력·판정·이동은 Unity에 있습니다.
+const canvas=document.querySelector('#game'),gate=document.querySelector('#gate'),status=document.querySelector('#status'),start=document.querySelector('#start'),help=document.querySelector('#help');
+let game=null,started=false;
+const send=method=>{if(game)game.SendMessage('RestartLine Rhythm Core',method);};
+document.querySelector('#helpButton').onclick=()=>{if(started)send('PauseSong');help.showModal();};
+document.querySelector('#closeHelp').onclick=()=>help.close();
+// 도움말을 닫아도 자동 재개하지 않습니다. 기존 P 입력으로 재개해 준비 시간을 줍니다.
+help.onclose=()=>{if(started)canvas.focus();};
+document.querySelector('#full').onclick=()=>{if(game)game.SetFullscreen(1);};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&started)send('PauseSong');});
+createUnityInstance(canvas,{
+ dataUrl:'Build/WebBuild.data.unityweb',frameworkUrl:'Build/WebBuild.framework.js.unityweb',codeUrl:'Build/WebBuild.wasm.unityweb',streamingAssetsUrl:'StreamingAssets',companyName:'Pulse Runner',productName:'Heartline',productVersion:'1.0',
+ showBanner:(message,type)=>{if(type==='error'){status.textContent=message;status.className='error';}}
+},progress=>{status.textContent='로딩 '+Math.round(progress*100)+'%';}).then(instance=>{game=instance;status.textContent='준비됐습니다. 조작 방법을 읽고 시작하세요.';start.disabled=false;start.textContent='게임 시작';}).catch(error=>{status.className='error';status.textContent='불러오기 실패: '+error;});
+start.onclick=()=>{if(!game)return;started=true;gate.hidden=true;gate.style.display='none';canvas.focus();send('RestartSong');};
+</script>
+</body></html>
